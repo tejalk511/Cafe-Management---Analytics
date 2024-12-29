@@ -1,4 +1,5 @@
 streamlit
 pandas
 streamlit_lottie
-mysql.connector
+pyodbc
+streamlit_lottie
