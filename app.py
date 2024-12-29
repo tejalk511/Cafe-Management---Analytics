@@ -1,15 +1,16 @@
+import pyodbc
 import streamlit as st
-import mysql.connector
+from streamlit_lottie import st_lottie
 import pandas as pd
 import requests
-from streamlit_lottie import st_lottie
-config = {
-    'user': 'root',
-    'password': 'IMkhan@123@#',
-    'host': 'localhost',
-    'port': 3305,  # Update the port number to 3305 because in installation i gave port 3305
-    'database':'userdb'
-}
+import datetime
+
+SERVER = 'LAPTOP-5QMOGSH0\\SQLEXPRESS'
+DATABASE = 'COFFEE_SALES'
+USERNAME = 'tejalsk'
+PASSWORD = 'Chimi@1611'
+
+connectionString = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER};DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
 
 def loti(url):
     r = requests.get(url)
@@ -17,401 +18,204 @@ def loti(url):
        return None
     else:
         return r.json()
-def create_connection():
-    """Create a connection to the MySQL database."""
-    db = mysql.connector.connect(**config)
-    return db
 
-def create_database(db):
-    """Create the 'userdb' database if it doesn't exist."""
-    cursor = db.cursor()
-    cursor.execute("CREATE DATABASE IF NOT EXISTS userdb")
-    cursor.close()
 
-def create_patients_table(db):
-    """Create the patients table in the database."""
-    cursor = db.cursor()
+#@st.cache_resource
+def init_connection():
+    return pyodbc.connect(connectionString)
 
-    create_patients_table_query = """
-    CREATE TABLE IF NOT EXISTS patients (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        age INT,
-        contact_number VARCHAR,
-        address VARCHAR(255),
-        date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMPCHAR(20),
-        email VARCHAR(255),
-    )
+conn = init_connection()
+
+# Perform query.
+# Uses st.cache_data to only rerun when the query changes or after 10 min.
+#@st.cache_data(ttl=600)
+
+#def run_query(query):
+#    with conn.cursor() as cur:
+#        cur.execute(query)
+#        return cur.fetchall()
+
+#rows = run_query("SELECT * from coffee_db;")
+
+# Print results.
+#for r in rows:
+#    st.write(f"{r.date}\t{r.datetime}\t{r.cash_type}\t{r.card}\t{r.money}\t{r.coffee_name}")
+
+def show_all_sales(db):
+    print("Checkpoint 1 \n")
+    cur = db.cursor()
+    print("Checkpoint 2 \n")
+    # Select the database
+    #cur.execute("USE coffee_db")
+    select_query = """
+    SELECT * from coffee_db
     """
+    print("Checkpoint 3.1 \n")
+    cur.execute(select_query)
 
-    cursor.execute(create_patients_table_query)
-    db.commit()
-    st.write("Patients table created successfully.")
+    # Set display options to increase the number of rows and columns
+    pd.set_option('display.max_rows', 100)  # Adjust as needed
+    pd.set_option('display.max_columns', 20)  # Adjust as needed
+    pd.set_option('display.width', 5000)  # Set the width of the display
+    pd.set_option('display.max_colwidth', 200)  # Set maximum column width
 
-def modify_patients_table(db):
-    cursor = db.cursor()
-
-    alter_table_query = """
-    ALTER TABLE patients
-    ADD COLUMN doctor_name VARCHAR(255),
-    ADD COLUMN disease VARCHAR(255),
-    ADD COLUMN fee INTEGER(5),
-    ADD COLUMN tests VARCHAR(255),
-    ADD COLUMN cnic VARCHAR(20)
-    """
-
-    cursor.execute(alter_table_query)
-    db.commit()
-    st.write("Patients table modified successfully.")
-
+    df = pd.read_sql_query(select_query, conn)
+    #print("Checkpoint 3.2 \n")
+    # Display the DataFrame
+    st.write(df)
+    # If no records found, show a message
+    if df.empty:
+        st.write("No sales records found.")
+        return
+    #print("Checkpoint 3.3 \n")
+    #records = cur.fetchall()
+    #if not records:
+    #    st.write("No appointments found") 
 
 
-def create_appointments_table(db):
-    """Create the appointments table in the database."""
-    cursor = db.cursor()
 
-    create_appointments_table_query = """
-    CREATE TABLE IF NOT EXISTS appointments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        patient_id INT,
-        appointment_date DATE,
-        appointment_time TIME,
-        doctor_name VARCHAR(255),
-        notes TEXT,
-        FOREIGN KEY (patient_id) REFERENCES patients(id)
-    )
-    """
+    
 
-    cursor.execute(create_appointments_table_query)
-    db.commit()
-    st.write("Appointments table created successfully.")
-
-def insert_patient_record(db, name, age, contact_number, email, address):
+def insert_order_record(date1, datetime1, cash_or_card, card_details, total_money, coffee):
     """Insert a new patient record into the 'patients' table."""
     cursor = db.cursor()
 
     # Select the database
-    cursor.execute("USE userdb")
+    #cursor.execute("USE coffee_db")
 
-    insert_patient_query = """
-    INSERT INTO patients (name, age, contact_number, email, address)
-    VALUES (%s, %s, %s, %s, %s)
+    insert_orders_query = """
+    INSERT INTO coffee_db (date, datetime, cash_type, card, money, coffee_name)
+    VALUES (?, ?, ?, ?, ?, ?)
     """
 
-    patient_data = (name, age, contact_number, email, address)
+    sales_data = (date1, datetime1, cash_or_card, card_details, total_money, coffee)
 
-    cursor.execute(insert_patient_query, patient_data)
+    cursor.execute(insert_orders_query, sales_data)
     db.commit()
-    st.write("Patient record inserted successfully.") 
-
-def fetch_all_patients(db):
-    """Fetch all records from the 'patients' table."""
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-
-    # Fetch all patients
-    select_patients_query = "SELECT * FROM patients"
-    cursor.execute(select_patients_query)
-    patients = cursor.fetchall()
-
-    return patients       
-
-def fetch_patient_by_id(db, patient_id):
-    """Fetch a patient's record from the 'patients' table based on ID."""
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-
-    # Fetch the patient by ID
-    select_patient_query = "SELECT * FROM patients WHERE id = %s"
-    cursor.execute(select_patient_query, (patient_id,))
-    patient = cursor.fetchone()
-
-    return patient
-
-def fetch_patient_by_contact(db, contact_number):
-    """Fetch a patient's record from the 'patients' table based on contact number."""
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-
-    # Fetch the patient by contact number
-    select_patient_query = "SELECT * FROM patients WHERE contact_number = %s"
-    cursor.execute(select_patient_query, (contact_number,))
-    patient = cursor.fetchone()
-
-    return patient
+    st.write("Coffee order record inserted successfully.") 
 
 
-def fetch_patient_by_cnis(db, cnis):
-    """Fetch a patient's record from the 'patients' table based on CNIS."""
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-
-    # Fetch the patient by CNIS
-    select_patient_query = "SELECT * FROM patients WHERE cnis = %s"
-    cursor.execute(select_patient_query, (cnis,))
-    patient = cursor.fetchone()
-
-    return patient
-
-     
-
-def delete_patient_record(db, delete_option, delete_value):
+def delete_order_record(db, del_date1, del_cash_or_card, del_card, del_coffee):
     """Delete a patient record from the 'patients' table based on ID, name, or contact number."""
     cursor = db.cursor()
 
     # Select the database
-    cursor.execute("USE userdb")
+    #cursor.execute("USE userdb")
 
-    # Delete the patient record
-    if delete_option == "ID":
-        delete_patient_query = "DELETE FROM patients WHERE id = %s"
-    elif delete_option == "Name":
-        delete_patient_query = "DELETE FROM patients WHERE name = %s"
-    elif delete_option == "Contact Number":
-        delete_patient_query = "DELETE FROM patients WHERE contact_number = %s"
+    delete_patient_query = """
+    DELETE FROM coffee_db WHERE date = ? AND cash_type = ? AND  card = ? AND coffee_name = ?
+    """
 
-    cursor.execute(delete_patient_query, (delete_value,))
+    delete_value = del_date1, del_cash_or_card, del_card, del_coffee
+
+    cursor.execute(delete_patient_query, delete_value)
     db.commit()
     st.write("Patient record deleted successfully.")
 
-def insert_appointment_record(db, patient_id, appointment_date, appointment_time, doctor_name, notes):
-    """Insert a new appointment record into the 'appointments' table."""
-    cursor = db.cursor()
 
-    # Select the database
-    cursor.execute("USE userdb")
-    appointment_time = appointment_time.strftime("%H:%M:%S")
-    appointment_date = appointment_date.strftime("%Y-%m-%d")
-    insert_appointment_query = """
-    INSERT INTO appointments (patient_id, appointment_date, appointment_time, doctor_name, notes)
-    VALUES (%s, %s, %s, %s, %s)
-    """
-
-    appointment_data = (patient_id, appointment_date, appointment_time, doctor_name, notes)
-
-    cursor.execute(insert_appointment_query, appointment_data)
-    db.commit()
-    print("Appointment record inserted successfully.")
-
-
-def fetch_all_appointments(db):
-    """Fetch all records from the 'appointments' table."""
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-
-    # Fetch all appointments
-    select_appointments_query = """
-    SELECT id, patient_id, DATE_FORMAT(appointment_date, '%Y-%m-%d') AS appointment_date, 
-           appointment_time, doctor_name, notes
-    FROM appointments
-    """
-    cursor.execute(select_appointments_query)
-    appointments = cursor.fetchall()
-
-    return appointments
-
-def show_all_appointments(db):
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-    select_query = """
-    SELECT id, patient_id, appointment_date, CAST(appointment_time AS CHAR), doctor_name, notes FROM appointments
-    """
-    cursor.execute(select_query)
-    records = cursor.fetchall()
-
-    if records:
-        st.subheader("All Appointment Records")
-        df = pd.DataFrame(records, columns=['ID', 'Patient ID', 'Appointment Date', 'Appointment Time', 'Doctor Name', 'Notes'])
-        st.dataframe(df)
-    else:
-        st.write("No appointments found")           
-
-def edit_appointment_record(db, appointment_id, new_appointment_date, new_appointment_time, new_doctor_name, new_notes):
-    """Edit an appointment record in the 'appointments' table."""
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-
-    # Update the appointment record
-    update_appointment_query = """
-    UPDATE appointments
-    SET appointment_date = %s, appointment_time = CAST(%s AS TIME), doctor_name = %s, notes = %s
-    WHERE id = %s
-    """
-    appointment_data = (new_appointment_date, new_appointment_time, new_doctor_name, new_notes, appointment_id)
-
-    cursor.execute(update_appointment_query, appointment_data)
-    db.commit()
+def update_sales_record(db):
+    """Search for a single record and allow editing of only the selected tuple."""
     
+    st.subheader("Search and Edit a Single Record")
 
-def fetch_appointment_by_id(db, appointment_id):
-    """Fetch an appointment's record from the 'appointments' table based on ID."""
-    cursor = db.cursor()
+    # Database cursor
+    cur = db.cursor()
 
-    # Select the database
-    cursor.execute("USE userdb")
+    # Input fields for filtering records
+    st.write("Search for a specific record using any of the following keys:")
+    date_filter = st.date_input("Enter Date (YYYY-MM-DD)", key="date_filter")
+    payment_options = ['Cash', 'Card']
+    cash_type_filter = st.selectbox("Enter Cash Type", key="cash_type_filter", options=payment_options)
+    menu_options = ['Latte', 'Cappuccino', 'Cocoa', 'Americano with Milk', 'Cortado', 'Espresso', 'Americano', 'Hot Chocolate']
+    coffee_name_filter = st.selectbox("Enter Coffee Name", key="coffee_name_filter", options=menu_options)
 
-    # Fetch the appointment by ID
-    select_appointment_query = """
-       SELECT id, patient_id, appointment_date, CAST(appointment_time AS CHAR), doctor_name, notes
-       FROM appointments
-       WHERE id = %s
-       """
-    cursor.execute(select_appointment_query, (appointment_id,))
-    appointment = cursor.fetchone()
+    # Add a Search button
+    if st.button("Search Records"):
+        # Build the WHERE clause for filtering
+        where_clause = "WHERE 1=1"  # Default WHERE clause (always true)
+        if date_filter:
+            where_clause += f" AND date = '{date_filter}'"
+        if cash_type_filter:
+            where_clause += f" AND cash_type = '{cash_type_filter}'"
+        if coffee_name_filter:
+            where_clause += f" AND coffee_name = '{coffee_name_filter}'"
 
-    return appointment  
+        # Execute query to fetch filtered records
+        query = f"SELECT * FROM coffee_db {where_clause}"
+        df = pd.read_sql_query(query, db)
 
+        # If no records found, display a message
+        if df.empty:
+            st.write("No records found for the given filters.")
+            return
 
-def fetch_appointment_by_patient_id(db, patient_id):
+        # Save the search results to session state
+        st.session_state['search_results'] = df
 
-    query = """
-    SELECT id, patient_id, appointment_date, CAST(appointment_time AS CHAR), doctor_name, notes
-    FROM appointments
-    WHERE patient_id = %s
-    """
-    cursor = db.cursor()
-    cursor.execute("USE userdb")
-    cursor.execute(query, (patient_id,))
-    appointment = cursor.fetchone()
-    #cursor.close()
-    return appointment  
+    # Check if search results exist in session state
+    if 'search_results' in st.session_state:
+        df = st.session_state['search_results']
 
+        # Display the DataFrame
+        st.write("Search Results:")
+        st.dataframe(df)
 
-def fetch_appointment_by_doctor_name(db, doctor_name):
-    query = """
-    SELECT id, patient_id, appointment_date, CAST(appointment_time AS CHAR), doctor_name, notes
-    FROM appointments
-    WHERE doctor_name = %s
-    """
-    cursor = db.cursor()
-    cursor.execute("USE userdb")
-    cursor.execute(query, (doctor_name,))
-    appointment = cursor.fetchone()
-    #cursor.close()
-    return appointment        
+        # Select box to choose a specific row (persist selection using session state)
+        if 'selected_row_index' not in st.session_state:
+            st.session_state['selected_row_index'] = None
 
+        row_selection = st.selectbox(
+            "Select a record to edit:",
+            options=df.index,
+            format_func=lambda idx: f"Row {idx + 1}: {df.loc[idx, 'date']}, {df.loc[idx, 'cash_type']}, {df.loc[idx, 'coffee_name']}",
+            key="row_selection",
+        )
 
-def search_appointment(db):
-    search_option = st.selectbox("Select search option", ["ID", "Patient ID", "Doctor Name"],key="search_option")
-    search_value = st.text_input("Enter search value",key="search_value")
+        # Update session state when a row is selected
+        st.session_state['selected_row_index'] = row_selection
 
-    if st.button("Search"):
-        if search_option == "ID":
-            appointment = fetch_appointment_by_id(db, search_value)
-        elif search_option == "Patient ID":
-            appointment = fetch_appointment_by_patient_id(db, search_value)
-        elif search_option == "Doctor Name":
-            appointment = fetch_appointment_by_doctor_name(db, search_value)
+        # Ensure a record is selected before editing
+        if st.session_state['selected_row_index'] is not None:
+            selected_row = df.loc[st.session_state['selected_row_index']]
 
-        if appointment:
-            st.subheader("Appointment Details")
-            df = pd.DataFrame([appointment], columns=['ID', 'Patient ID', 'Appointment Date', 'Appointment Time', 'Doctor Name', 'Notes'])
-            st.dataframe(df)
-            st.session_state.edit_appointment = appointment
-        else:
-            st.write("Appointment not found")
-    if 'edit_appointment' in st.session_state:
-        edit_appointment(db)        
+            # Editable fields for the selected record
+            st.write("Edit Selected Record:")
+            date = st.text_input("Date", selected_row['date'], key="edit_date")
+            cash_type = st.text_input("Cash Type", selected_row['cash_type'], key="edit_cash_type")
+            coffee_name = st.text_input("Coffee Name", selected_row['coffee_name'], key="edit_coffee_name")
+            total_money = st.number_input("Total Money", selected_row['money'], key="edit_money")
 
-def edit_appointment(db):
-    #if 'edit_appointment' in st.session_state:
-        appointment = st.session_state.edit_appointment
-        st.subheader("Edit Appointment Details")
-        new_appointment_date = st.date_input("Appointment Date", value=appointment[2])
-        new_appointment_time = st.text_input("Appointment Time", value=appointment[3])
-        new_doctor_name = st.text_input("Doctor Name", value=appointment[4])
-        new_notes = st.text_input("Notes", value=appointment[5])
+            # Update button
+            if st.button("Update Record"):
+                update_query = """
+                UPDATE coffee_db
+                SET date = ?, cash_type = ?, coffee_name = ?, money = ?
+                WHERE id = ?
+                """
+                cur.execute(update_query, (date, cash_type, coffee_name, total_money, selected_row['id']))
+                db.commit()
+                st.success("Record updated successfully!")
 
-        if st.button("Update Appointment"):
-            edit_appointment_record(db, appointment[0], new_appointment_date, new_appointment_time, new_doctor_name, new_notes)
-            st.write("Appointment record updated successfully.")
-            del st.session_state.edit_appointment
+                # Clear session state to refresh data
+                del st.session_state['search_results']
+                del st.session_state['selected_row_index']
+                st.write("Please search again to view the updated record.")
 
-def update_patient_record(db):
-    """Update a patient's record in the 'patients' table."""
-
-    search_option = st.selectbox("Select search option", ["ID", "Contact Number", "CNIS"], key="search_option")
-    search_value = st.text_input("Enter search value", key="search_value")
-
-    if st.button("Search :magic_wand:"):
-        if search_option == "ID":
-            patient = fetch_patient_by_id(db, search_value)
-        elif search_option == "Contact Number":
-            patient = fetch_patient_by_contact(db, search_value)
-        elif search_option == "CNIS":
-            patient = fetch_patient_by_cnis(db, search_value)
-
-        if patient:
-            st.subheader("Patient Details")
-            df = pd.DataFrame([patient], columns=['ID', 'Name', 'Age', 'Contact Number', 'Email', 'Address', 'Date Added'])
-            st.dataframe(df)
-            st.session_state.edit_patient = patient
-        else:
-            st.write("Patient not found")
-
-    if 'edit_patient' in st.session_state:
-        edit_patient(db)
-
-
-def edit_patient(db):
-    """Edit a patient's record in the 'patients' table."""
-
-    st.subheader("Edit Patient Details")
-    new_name = st.text_input("Enter new name", value=st.session_state.edit_patient[1])
-    new_age = st.number_input("Enter new age", value=st.session_state.edit_patient[2])
-    new_contact = st.text_input("Enter new contact number", value=st.session_state.edit_patient[3])
-    new_email = st.text_input("Enter new email", value=st.session_state.edit_patient[4])
-    new_address = st.text_input("Enter new address", value=st.session_state.edit_patient[5])
-
-    if st.button("Update :roller_coaster:"):
-        patient_id = st.session_state.edit_patient[0]
-        update_patient_info(db, patient_id, new_name, new_age, new_contact, new_email, new_address)
-        
-
-
-def update_patient_info(db, patient_id, new_name, new_age, new_contact, new_email, new_address):
-    """Update a patient's record in the 'patients' table."""
-    cursor = db.cursor()
-
-    # Select the database
-    cursor.execute("USE userdb")
-
-    # Update the patient record
-    update_patient_query = """
-    UPDATE patients
-    SET name = %s, age = %s, contact_number = %s, email = %s, address = %s
-    WHERE id = %s
-    """
-    patient_data = (new_name, new_age, new_contact, new_email, new_address, patient_id)
-
-    cursor.execute(update_patient_query, patient_data)
-    db.commit()
-    st.write("Patient record updated successfully.")
-
-
-
+        # Add a Reset button to clear search results and selection
+        if st.button("Reset Search Records"):
+            if 'search_results' in st.session_state:
+                del st.session_state['search_results']
+            if 'selected_row_index' in st.session_state:
+                del st.session_state['selected_row_index']
+            st.write("Search reset successfully. You can perform a new search.")
 
 
 def main():
     # Title and sidebar
-    st.title("Patient Management System :hospital:")
+    st.title("Coffee Shop Sales Mangement system")
     lott1 = loti( "https://assets6.lottiefiles.com/packages/lf20_olluraqu.json")
     lotipatient = loti("https://assets6.lottiefiles.com/packages/lf20_vPnn3K.json")
-    db = create_connection()
+    #db = init_connection()
 
     #create_database(db)
 
@@ -422,76 +226,64 @@ def main():
     #create_appointments_table(db)
     #modify_patients_table(db)
 
-    menu = ["Home","Add patient Record","Show patiet Records", "Search and Edit Patient","Deetel Patients Record",
-            "Add patients Appointments","Show All Appointments","Search and Edit Patients Appointments"]
+    #menu = ["Home","Add Coffee sold entry","Show Coffee sales", 
+    #        "Search and Modify Sales record","Delete Record","Show All Sales"]
+    menu = ["Home","Show All Sales", "Add Coffee order", "Delete Record", "Modify Order Records"]
+    
     options = st.sidebar.radio("Select an Option :dart:",menu)
     if options== "Home":
-        st.subheader("Welcome to Hospital Mnagement System")
+        st.subheader("Welcome to Coffee Shop management system")
         st.write("Navigate from sidebar to access database")
         st_lottie(lott1,height=500)
         #st.image('hospital.jpg', width=600)
 
-    elif options == "Add patient Record":
-       st.subheader("Enter patient details :woman_in_motorized_wheelchair:")
+    elif options=="Show All Sales":
+        show_all_sales(db)
+
+    
+    elif options == "Add Coffee order":
+       st.subheader("Enter coffee order details - ")
        st_lottie(lotipatient,height = 200)
-       name = st.text_input("Enter name of patient",key = "name")
-       age = st.number_input("Enter age of patient",key = "age",value = 1)
-       contact = st.text_input("Enter contact of patient",key = "contact")
-       email = st.text_input("Enter Email of patient",key = "email")
-       address = st.text_input("Enter Address of patient",key= "address")
-       if st.button("add patient record"):
+       date1 = st.date_input("Enter date",key = "date1")
+       time1 = st.time_input("Enter time",key = "time1")
+       datetime1 = datetime.datetime.combine(date1, time1)
+       payment_options = ['Cash', 'Card']
+       cash_or_card = st.selectbox("Payment method",key = "cash_or_card", options=payment_options)
+       card_details = st.text_input("card",key = "card_details")
+       total_money = st.number_input("Enter Bill amount",key= "total_money", min_value=0.0, max_value=100.0, value=0.0, step=0.1)
+       menu_options = ['Latte', 'Cappuccino', 'Cocoa', 'Americano with Milk', 'Cortado', 'Espresso', 'Americano', 'Hot Chocolate']
+       coffee = st.selectbox("Choose coffee to order ",key= "coffee", options=menu_options)
+       if st.button("Add Order Entry"):
           cursor = db.cursor()
-          select_query = """
-          SELECT * FROM patients WHERE contact_number=%s
-          """
-          cursor.execute(select_query,(contact,))
-          existing_patient = cursor.fetchone()
-          if existing_patient:
-            st.warning("A patient with the same contact number already exist")
-          else:  
-            insert_patient_record(db, name, age, contact, email, address)
+          #select_query = """
+          #INSERT INTO table_name (date, datetime, cash_type, card, money, coffee_name )
+          #  VALUES (date1, datetime1, cash_or_card, card_details, total_money, coffee);
+          
+          #cursor.execute(select_query,(contact,))
+          #existing_patient = cursor.fetchone() 
+          insert_order_record(date1, datetime1, cash_or_card, card_details, total_money, coffee)
 
-    elif options=="Show patiet Records":
-        patients = fetch_all_patients(db)
-        if patients:
-            st.subheader("All patients Records :magic_wand:")
-            df = pd.DataFrame(patients, columns=['ID', 'Name', 'Age', 'Contact Number', 'Email', 'Address', 'Date Added'])
-            st.dataframe(df)
-        else:
-            st.write("No patients found")
-    elif options == "Search and Edit Patient":
-         update_patient_record(db)
-           
+        
+    elif options == "Delete Record":
+        st.subheader("Search a record to delete: ")
+        #delete_option = st.selectbox("Select delete option", ["ID", "Name", "Contact Number"], key="delete_option")
+        #delete_value = st.text_input("Enter delete value", key="delete_value")
+        del_date1 = st.date_input("Enter date",key = "date1")
+        menu_options = ['Latte', 'Cappuccino', 'Cocoa', 'Americano with Milk', 'Cortado', 'Espresso', 'Americano', 'Hot Chocolate']
+        del_coffee = st.selectbox("Choose coffee to order ",key= "coffee", options=menu_options)
+        payment_options = ['Cash', 'Card']
+        del_cash_or_card = st.selectbox("Payment method",key = "cash_or_card", options=payment_options)
+        del_card = st.text_input("card",key = "card_details")
 
-    elif options == "Deetel Patients Record":
-         st.subheader("Search a patient to delate :skull_and_crossbones:")
-         delete_option = st.selectbox("Select delete option", ["ID", "Name", "Contact Number"], key="delete_option")
-         delete_value = st.text_input("Enter delete value", key="delete_value")
-
-         if st.button("Delete"):
-            delete_patient_record(db, delete_option, delete_value)
-
-    elif options == "Add patients Appointments":
-          patient_id = st.number_input("Enter patient ID:", key="appointment_patient_id")
-          appointment_date = st.date_input("Enter appointment date:", key="appointment_date")
-          appointment_time = st.time_input("Enter appointment time:", key="appointment_time")
-          doctor_name = st.text_input("Enter doctor's name:", key="appointment_doctor_name")
-          notes = st.text_area("Enter appointment notes:", key="appointment_notes")
-
-          if st.button("Add Appointment"):
-               insert_appointment_record(db, patient_id, appointment_date, appointment_time, doctor_name, notes)
-               st.write("Appointment record added successfully.")    
-
-    elif options=="Show All Appointments":
-         show_all_appointments(db)
-
-
-    elif options == "Search and Edit Patients Appointments":
-
-        search_appointment(db) 
-                
+        if st.button("Delete"):
+            delete_order_record(db, del_date1, del_cash_or_card, del_card, del_coffee)
+    
+    elif options == "Modify Order Records":
+        update_sales_record(db)
 
     db.close()
 
+
 if __name__ == "__main__":
+    db = init_connection()
     main()
