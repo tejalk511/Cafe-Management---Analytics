@@ -4,11 +4,11 @@
 This project is a Streamlit-based web application for managing coffee shop sales records. It allows users to view, add, delete, and modify coffee orders. The application uses a SQL database to store and retrieve sales data.
 
 ## Features
-Home: Welcome page with a brief introduction and navigation instructions.
-Show All Sales: Displays all sales records from the database.
-Add Coffee Order: Allows users to add a new coffee order with details such as date, time, payment method, card details, bill amount, and coffee type.
-Delete Record: Enables users to delete a specific coffee order based on date, coffee type, payment method, and card details.
-Modify Order Records: Provides functionality to update existing sales records.
+- Home: Welcome page with a brief introduction and navigation instructions.
+- Show All Sales: Displays all sales records from the database.
+- Add Coffee Order: Allows users to add a new coffee order with details such as date, time, payment method, card details, bill amount, and coffee type.
+- Delete Record: Enables users to delete a specific coffee order based on date, coffee type, payment method, and card details.
+- Modify Order Records: Provides functionality to update existing sales records.
 
 ## Dependencies
 The project relies on the following dependencies:
