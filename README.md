@@ -1,5 +1,3 @@
-# Cafe-Management-Analytics
-
 # Coffee Shop Management System
 This project is a Streamlit-based web application for managing coffee shop sales records. It allows users to view, add, delete, and modify coffee orders. The application uses a SQL database to store and retrieve sales data.
 
