@@ -20,7 +20,7 @@ Typing: For type hinting.
 
 ## Installation
 Clone the repository:
-git clone https://github.com/yourusername/coffee-shop-management.git
+git clone https://github.com/tejalk511/coffee-shop-management.git
 cd coffee-shop-management
 
 ## Install the required dependencies:
@@ -30,10 +30,10 @@ pip install -r requirements.txt
 streamlit run test_streamlit_sql.py
 
 ## Usage
-Open the application in your web browser.
-Use the sidebar to navigate between different options:
-Home: View the welcome page.
-Show All Sales: View all sales records.
-Add Coffee Order: Add a new coffee order.
-Delete Record: Delete an existing coffee order.
-Modify Order Records: Update existing sales records.
+- Open the application in your web browser.
+- Use the sidebar to navigate between different options:
+- Home: View the welcome page.
+- Show All Sales: View all sales records.
+- Add Coffee Order: Add a new coffee order.
+- Delete Record: Delete an existing coffee order.
+- Modify Order Records: Update existing sales records.
