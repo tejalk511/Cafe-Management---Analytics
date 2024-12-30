@@ -1,39 +1,96 @@
+Collecting workspace information
+
 # Coffee Shop Management System
-This project is a Streamlit-based web application for managing coffee shop sales records. It allows users to view, add, delete, and modify coffee orders. The application uses a SQL database to store and retrieve sales data.
 
-## Features
-- Home: Welcome page with a brief introduction and navigation instructions.
-- Show All Sales: Displays all sales records from the database.
-- Add Coffee Order: Allows users to add a new coffee order with details such as date, time, payment method, card details, bill amount, and coffee type.
-- Delete Record: Enables users to delete a specific coffee order based on date, coffee type, payment method, and card details.
-- Modify Order Records: Provides functionality to update existing sales records.
+## Description
 
-## Dependencies
-The project relies on the following dependencies:
-Streamlit: For creating the web application interface.
-Pandas: For data manipulation and analysis.
-SQLite: For database operations.
-Datetime: For handling date and time operations.
-UUID: For generating unique keys.
-Typing: For type hinting.
+This project is a Streamlit-based web application designed to manage coffee shop sales records. It provides an interactive interface for users to view, add, delete, and modify coffee orders. The application uses a SQL database to store and retrieve sales data, making it easy to keep track of all transactions.
 
+## Setup Instructions
 
-## Installation
-Clone the repository:
-git clone https://github.com/tejalk511/coffee-shop-management.git
-cd coffee-shop-management
+1. **Clone the Repository**:
+   ```sh
+   git clone https://github.com/yourusername/coffee-shop-management.git
+   cd coffee-shop-management
+   ```
 
-## Install the required dependencies:
-pip install -r requirements.txt
+2. **Install the Required Dependencies**:
+   Make sure you have Python installed. Then, install the dependencies using pip:
+   ```sh
+   pip install -r requirements.txt
+   ```
 
-## Run the Streamlit application:
-streamlit run test_streamlit_sql.py
+3. **Run the Streamlit Application**:
+   Start the Streamlit server to run the application:
+   ```sh
+   streamlit run test_streamlit_sql.py
+   ```
 
 ## Usage
-- Open the application in your web browser.
-- Use the sidebar to navigate between different options:
-- Home: View the welcome page.
-- Show All Sales: View all sales records.
-- Add Coffee Order: Add a new coffee order.
-- Delete Record: Delete an existing coffee order.
-- Modify Order Records: Update existing sales records.
+
+1. **Open the Application**:
+   Open your web browser and navigate to the local URL provided by Streamlit (usually `http://localhost:8501`).
+
+2. **Navigate Using the Sidebar**:
+   Use the sidebar to navigate between different options:
+   - **Home**: View the welcome page.
+   - **Show All Sales**: View all sales records.
+   - **Add Coffee Order**: Add a new coffee order.
+   - **Delete Record**: Delete an existing coffee order.
+   - **Modify Order Records**: Update existing sales records.
+
+3. **Add a Coffee Order**:
+   - Select "Add Coffee order" from the sidebar.
+   - Enter the order details such as date, time, payment method, card details, bill amount, and coffee type.
+   - Click the "Add Order Entry" button to save the order.
+
+4. **Delete a Coffee Order**:
+   - Select "Delete Record" from the sidebar.
+   - Enter the details of the order to be deleted.
+   - Click the "Delete" button to remove the order from the database.
+
+5. **Modify Order Records**:
+   - Select "Modify Order Records" from the sidebar.
+   - Follow the prompts to update existing sales records.
+
+## Contributor Guidelines
+
+We welcome contributions to improve this project. To contribute, please follow these steps:
+
+1. **Fork the Repository**:
+   Click the "Fork" button at the top right of the repository page to create a copy of the repository in your GitHub account.
+
+2. **Clone Your Fork**:
+   Clone your forked repository to your local machine:
+   ```sh
+   git clone https://github.com/yourusername/coffee-shop-management.git
+   cd coffee-shop-management
+   ```
+
+3. **Create a Branch**:
+   Create a new branch for your feature or bug fix:
+   ```sh
+   git checkout -b feature-or-bugfix-name
+   ```
+
+4. **Make Your Changes**:
+   Make your changes to the codebase.
+
+5. **Commit Your Changes**:
+   Commit your changes with a descriptive commit message:
+   ```sh
+   git commit -m "Description of the changes"
+   ```
+
+6. **Push to Your Fork**:
+   Push your changes to your forked repository:
+   ```sh
+   git push origin feature-or-bugfix-name
+   ```
+
+7. **Create a Pull Request**:
+   Open a pull request from your forked repository to the main repository. Provide a clear description of your changes and any relevant information.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for more details.
