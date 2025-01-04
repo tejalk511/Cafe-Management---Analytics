@@ -1,5 +1,3 @@
-Collecting workspace information
-
 # Coffee Shop Management System
 
 ## Description
@@ -31,6 +29,8 @@ This project is a Streamlit-based web application designed to manage coffee shop
 1. **Open the Application**:
    Open your web browser and navigate to the local URL provided by Streamlit (usually `http://localhost:8501`).
 
+![home](https://github.com/user-attachments/assets/d1fb311e-48c6-4c55-82d9-cb8cfd0d3f5c)
+
 2. **Navigate Using the Sidebar**:
    Use the sidebar to navigate between different options:
    - **Home**: View the welcome page.
@@ -43,6 +43,8 @@ This project is a Streamlit-based web application designed to manage coffee shop
    - Select "Add Coffee order" from the sidebar.
    - Enter the order details such as date, time, payment method, card details, bill amount, and coffee type.
    - Click the "Add Order Entry" button to save the order.
+   
+![Add_sales_order](https://github.com/user-attachments/assets/497a9d75-9af7-4fca-8a47-184205d67887)
 
 4. **Delete a Coffee Order**:
    - Select "Delete Record" from the sidebar.
@@ -52,6 +54,13 @@ This project is a Streamlit-based web application designed to manage coffee shop
 5. **Modify Order Records**:
    - Select "Modify Order Records" from the sidebar.
    - Follow the prompts to update existing sales records.
+
+![Modify_sales_record2](https://github.com/user-attachments/assets/5c664e49-eefc-4cac-add0-c7791c80f5b4)
+
+6. **Sales DashBoard**:
+- Swipe left or right to view different sales dashboard results.
+- You can zoom in and out to explore the details more clearly and open specific sections for further insights.
+![Sales_analyer](https://github.com/user-attachments/assets/ddfc44a0-aef4-4810-864b-3f46d44949ef)
 
 ## Contributor Guidelines
 
