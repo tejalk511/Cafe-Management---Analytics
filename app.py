@@ -1,14 +1,17 @@
+import base64
+import os
 import pyodbc
 import streamlit as st
 from streamlit_lottie import st_lottie
 import pandas as pd
 import requests
 import datetime
+from PIL import Image
 
-SERVER = 'LAPTOP-5QMOGSH0\\SQLEXPRESS'
+SERVER = 'XXXXXXXX'
 DATABASE = 'COFFEE_SALES'
-USERNAME = 'tejalsk'
-PASSWORD = 'Chimi@1611'
+USERNAME = 'xxxxxx'
+PASSWORD = '******'
 
 connectionString = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER};DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
 
@@ -26,20 +29,6 @@ def init_connection():
 
 conn = init_connection()
 
-# Perform query.
-# Uses st.cache_data to only rerun when the query changes or after 10 min.
-#@st.cache_data(ttl=600)
-
-#def run_query(query):
-#    with conn.cursor() as cur:
-#        cur.execute(query)
-#        return cur.fetchall()
-
-#rows = run_query("SELECT * from coffee_db;")
-
-# Print results.
-#for r in rows:
-#    st.write(f"{r.date}\t{r.datetime}\t{r.cash_type}\t{r.card}\t{r.money}\t{r.coffee_name}")
 
 def show_all_sales(db):
     print("Checkpoint 1 \n")
@@ -60,17 +49,11 @@ def show_all_sales(db):
     pd.set_option('display.max_colwidth', 200)  # Set maximum column width
 
     df = pd.read_sql_query(select_query, conn)
-    #print("Checkpoint 3.2 \n")
-    # Display the DataFrame
     st.write(df)
     # If no records found, show a message
     if df.empty:
         st.write("No sales records found.")
         return
-    #print("Checkpoint 3.3 \n")
-    #records = cur.fetchall()
-    #if not records:
-    #    st.write("No appointments found") 
 
 
 
@@ -79,9 +62,6 @@ def show_all_sales(db):
 def insert_order_record(date1, datetime1, cash_or_card, card_details, total_money, coffee):
     """Insert a new patient record into the 'patients' table."""
     cursor = db.cursor()
-
-    # Select the database
-    #cursor.execute("USE coffee_db")
 
     insert_orders_query = """
     INSERT INTO coffee_db (date, datetime, cash_type, card, money, coffee_name)
@@ -98,9 +78,6 @@ def insert_order_record(date1, datetime1, cash_or_card, card_details, total_mone
 def delete_order_record(db, del_date1, del_cash_or_card, del_card, del_coffee):
     """Delete a patient record from the 'patients' table based on ID, name, or contact number."""
     cursor = db.cursor()
-
-    # Select the database
-    #cursor.execute("USE userdb")
 
     delete_patient_query = """
     DELETE FROM coffee_db WHERE date = ? AND cash_type = ? AND  card = ? AND coffee_name = ?
@@ -210,32 +187,42 @@ def update_sales_record(db):
             st.write("Search reset successfully. You can perform a new search.")
 
 
+# List of image paths
+image_paths = ["ilovepdf_pages-to-jpg\power_bi_report2_page-0001.jpg", "ilovepdf_pages-to-jpg\power_bi_report2_page-0002.jpg"]  # Replace with your image file paths
+
+def view_analysis_db(db):
+    # Initialize session state to track the current image index
+    if "current_index" not in st.session_state:
+        st.session_state.current_index = 0
+
+    # Display the current image
+    image = Image.open(image_paths[st.session_state.current_index])
+    st.image(image, caption=f"Image {st.session_state.current_index + 1} of {len(image_paths)}", use_column_width=True)
+
+    # Navigation buttons
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1:
+        if st.button("⬅️ Previous", key="prev"):
+            st.session_state.current_index = (st.session_state.current_index - 1) % len(image_paths)
+    with col3:
+        if st.button("Next ➡️", key="next"):
+            st.session_state.current_index = (st.session_state.current_index + 1) % len(image_paths)
+
+
+
 def main():
     # Title and sidebar
-    st.title("Coffee Shop Sales Mangement system")
-    lott1 = loti( "https://assets6.lottiefiles.com/packages/lf20_olluraqu.json")
-    lotipatient = loti("https://assets6.lottiefiles.com/packages/lf20_vPnn3K.json")
-    #db = init_connection()
+    st.title("BrewBiz: Coffee Sales Analyzer")
+    lott1 = loti("https://lottie.host/2fab43a9-afe3-4e18-9b32-26ec11cb9541/ePl7AwSWZP.json")
 
-    #create_database(db)
-
-    #config['database'] = 'userdb'  # Update the database name
-    #db = create_connection()
-
-    #create_patients_table(db)
-    #create_appointments_table(db)
-    #modify_patients_table(db)
-
-    #menu = ["Home","Add Coffee sold entry","Show Coffee sales", 
-    #        "Search and Modify Sales record","Delete Record","Show All Sales"]
-    menu = ["Home","Show All Sales", "Add Coffee order", "Delete Record", "Modify Order Records"]
+    menu = ["Home","Show All Sales", "Add Coffee order", "Delete Record", "Modify Order Records","View Analysis"]
     
     options = st.sidebar.radio("Select an Option :dart:",menu)
     if options== "Home":
         st.subheader("Welcome to Coffee Shop management system")
         st.write("Navigate from sidebar to access database")
         st_lottie(lott1,height=500)
-        #st.image('hospital.jpg', width=600)
+       
 
     elif options=="Show All Sales":
         show_all_sales(db)
@@ -243,7 +230,7 @@ def main():
     
     elif options == "Add Coffee order":
        st.subheader("Enter coffee order details - ")
-       st_lottie(lotipatient,height = 200)
+       #st_lottie(lotipatient,height = 200)
        date1 = st.date_input("Enter date",key = "date1")
        time1 = st.time_input("Enter time",key = "time1")
        datetime1 = datetime.datetime.combine(date1, time1)
@@ -255,19 +242,11 @@ def main():
        coffee = st.selectbox("Choose coffee to order ",key= "coffee", options=menu_options)
        if st.button("Add Order Entry"):
           cursor = db.cursor()
-          #select_query = """
-          #INSERT INTO table_name (date, datetime, cash_type, card, money, coffee_name )
-          #  VALUES (date1, datetime1, cash_or_card, card_details, total_money, coffee);
-          
-          #cursor.execute(select_query,(contact,))
-          #existing_patient = cursor.fetchone() 
           insert_order_record(date1, datetime1, cash_or_card, card_details, total_money, coffee)
 
         
     elif options == "Delete Record":
         st.subheader("Search a record to delete: ")
-        #delete_option = st.selectbox("Select delete option", ["ID", "Name", "Contact Number"], key="delete_option")
-        #delete_value = st.text_input("Enter delete value", key="delete_value")
         del_date1 = st.date_input("Enter date",key = "date1")
         menu_options = ['Latte', 'Cappuccino', 'Cocoa', 'Americano with Milk', 'Cortado', 'Espresso', 'Americano', 'Hot Chocolate']
         del_coffee = st.selectbox("Choose coffee to order ",key= "coffee", options=menu_options)
@@ -280,6 +259,9 @@ def main():
     
     elif options == "Modify Order Records":
         update_sales_record(db)
+    
+    elif options == "View Analysis":
+        view_analysis_db(db)
 
     db.close()
 
